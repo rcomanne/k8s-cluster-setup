@@ -1,0 +1,12 @@
+
+server:
+  ingress:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    hosts:
+      - argocd.rcomanne.nl
+
+logging:
+  format: json
+

@@ -8,6 +8,6 @@ resource "helm_release" "argo-cd" {
   version          = var.argo_cd_version
 
   values = [
-    "${file("helm-values/argo-cd.yaml")}"
+    file("helm-values/argo-cd.yaml")
   ]
 }

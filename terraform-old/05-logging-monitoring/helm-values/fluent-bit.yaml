@@ -1,0 +1,14 @@
+config:
+  outputs: |
+    [OUTPUT]
+        Name opensearch
+        Match *
+        Host opensearch-cluster-master.opensearch.svc.cluster.local
+        Port 9200
+        Logstash_Format true
+        Logstash_Prefix logstash
+        Logstash_Prefix_Key $kubernetes['namespace_name']
+        HTTP_User fluent
+        HTTP_Passwd f2Z6aqD8B4SWHvFEKsnXNk
+        tls off
+        Suppress_Type_Name on

@@ -8,7 +8,7 @@ The nodes are based on Ubuntu 22.04 and will be running microk8s.
 3. Add the name of the template vm to your variables and execute the Terraform files under `./terraform/infrastrcture`:  
     ```bash
     $ terraform init
-    $ terraform plan -out infra.tfplan
+    $ terraform plan -var-file env/homelab.tfvars -out infra.tfplan
     $ terraform apply infra.tfplan
     ```
 4. Get a shell to the master node via PVE or your own local terminal, install microk8s and get the token for the worker nodes to join the cluster.

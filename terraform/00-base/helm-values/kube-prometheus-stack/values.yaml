@@ -1,0 +1,14 @@
+crds:
+  enabled: true
+
+grafana:
+  defaultDashboardsTimezone: browser
+  adminPassword: ${grafanaAdminPassword}
+
+  ingress:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    hosts:
+      - grafana.rcomanne.nl
+    path: /

@@ -1,0 +1,17 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: ${name}
+  namespace: ${namespace}
+spec:
+  postgresGID: 1000
+  instances: 3
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: true
+  postgresql:
+    pg_hba:
+      - hostssl all all 192.168.2.0/24 trust
+      - hostnossl all all 192.168.2.0/24 trust
+  storage:
+    size: 16Gi
+    storageClass: ${storageClass}

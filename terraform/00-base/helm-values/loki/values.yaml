@@ -1,0 +1,3 @@
+promtail.enabled: false
+
+fluent-bit.enabled: true

@@ -1,0 +1,7 @@
+kubeletDir: "/var/snap/microk8s/common/var/lib/kubelet"
+
+node:
+  dnsPolicy: ClusterFirstWithHostNet
+
+controller:
+  dnsPolicy: ClusterFirstWithHostNet

@@ -1,0 +1,83 @@
+singleNode: false
+
+sysctlInit:
+  enabled: true
+
+persistence:
+  enabled: true
+  enableInitChown: false
+  storageClass: nfs-opensearch
+
+securityConfig:
+  internalUsersSecret: 'opensearch-internal-users'
+
+secretMounts:
+  - name: opensearch-certs
+    path: /usr/share/opensearch/config/certs
+    secretName: opensearch-certs
+
+extraObjects:
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: nfs-opensearch
+    provisioner: nfs.csi.k8s.io
+    parameters:
+      server: truenas.home
+      share: /mnt/habbo/nfs/rcomanne/opensearch
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    mountOptions:
+      - nfsvers=4.1
+      - hard
+
+extraEnvs:
+  - name: DISABLE_INSTALL_DEMO_CONFIG
+    value: 'true'
+
+config:
+  opensearch.yml: |
+    cluster.name: opensearch-cluster
+
+    # Bind to all interfaces because we don't know what IP address Docker will assign to us.
+    network.host: 0.0.0.0
+    
+    plugins:
+      security:
+        nodes_dn:
+          - 'CN=opensearch-cluster-master,OU=k8s,O=CyberComanne,L=Hilversum,ST=Noord-Holland,C=NL'
+        ssl:
+          transport:
+            pemcert_filepath: certs/node.pem
+            pemkey_filepath: certs/node-key.pem
+            pemtrustedcas_filepath: certs/root-ca.pem
+            enforce_hostname_verification: false
+          http:
+            enabled: false
+        allow_unsafe_democertificates: true
+        allow_default_init_securityindex: true
+        authcz:
+          admin_dn:
+            - 'CN=kirk,OU=client,O=client,L=test,C=de'
+            - 'CN=rcomanne,OU=k8s,O=CyberComanne,L=Hilversum,ST=Noord-Holland,C=NL'
+        audit.type: internal_opensearch
+        enable_snapshot_restore_privilege: true
+        check_snapshot_restore_write_privileges: true
+        restapi:
+          roles_enabled: ["all_access", "security_rest_api_access"]
+        system_indices:
+          enabled: true
+          indices:
+            [
+              ".opendistro-alerting-config",
+              ".opendistro-alerting-alert*",
+              ".opendistro-anomaly-results*",
+              ".opendistro-anomaly-detector*",
+              ".opendistro-anomaly-checkpoints",
+              ".opendistro-anomaly-detection-state",
+              ".opendistro-reports-*",
+              ".opendistro-notifications-*",
+              ".opendistro-notebooks",
+              ".opendistro-asynchronous-search-response*",
+            ]

@@ -1,0 +1,10 @@
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  ingress:
+    hosts:
+      - host: pgadmin.rcomanne.nl
+        paths:
+          - path: /
+            pathType: Prefix

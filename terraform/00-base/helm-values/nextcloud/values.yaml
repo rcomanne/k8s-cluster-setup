@@ -1,0 +1,42 @@
+phpClientHttpsFix:
+  enabled: true
+
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+nextcloud:
+  host: nextcloud.rcomanne.nl
+  containerPort: 8080
+
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-admin
+    usernameKey: username
+    passwordKey: password
+
+#  securityContext:
+#    runAsUser: 33
+#    runAsGroup: 33
+#    runAsNonRoot: true
+#
+#  podSecurityContext:
+#    runAsUser: 33
+#    runAsGroup: 33
+#    runAsNonRoot: true
+
+startupProbe:
+  enabled: true
+
+#internalDatabase:
+#  enabled: false
+#
+#externalDatabase:
+#  enabled: true
+#  type: postgresql
+
+#persistence:
+#  enabled: true
+#  storageClass: nfs-csi-default
+#  size: 16Gi

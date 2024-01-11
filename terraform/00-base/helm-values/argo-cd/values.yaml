@@ -1,0 +1,44 @@
+crds:
+  enabled: true
+  keep: false
+
+global:
+  networkPolicy:
+    create: false
+    defaultDenyIngress: false
+
+server:
+  ingress:
+    enabled: true
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    hosts:
+      - ${argo_cd_host}
+
+configs:
+  cm:
+    url: "https://${argo_cd_host}"
+    oidc.config: |
+      name: Azure
+      issuer: https://login.microsoftonline.com/${directory_tenant_id}/v2.0
+      clientID: ${oidc_client_id}
+      clientSecret: $oidc.azure.clientSecret
+      requestedIDTokenClaims:
+         groups:
+            essential: true
+      requestedScopes:
+         - openid
+         - profile
+         - email
+
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:org-admin, applications, *, */*, allow
+      p, role:org-admin, clusters, get, *, allow
+      p, role:org-admin, repositories, get, *, allow
+      p, role:org-admin, repositories, create, *, allow
+      p, role:org-admin, repositories, update, *, allow
+      p, role:org-admin, repositories, delete, *, allow
+      g, "${oidc_admin_group_id}", role:org-admin
+    scopes: "[groups, email]"

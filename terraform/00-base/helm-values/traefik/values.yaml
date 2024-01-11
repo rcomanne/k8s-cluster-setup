@@ -1,0 +1,31 @@
+ports:
+  traefik:
+    expose: true
+  websecure:
+    tls:
+      enabled: true
+      certResolver: "letsencrypt"
+  postgres:
+    port: 5432
+    expose: true
+    exposedPort: 5432
+    protocol: TCP
+
+
+certResolvers:
+  letsencrypt:
+    caServer: "https://acme-v02.api.letsencrypt.org/directory"
+    email: info@rcomanne.nl
+    tlsChallenge: true
+    storage: /data/letsencrypt.json
+
+providers:
+  kubernetesIngress:
+    publishedService:
+      allowExternalNameServices: true
+      enabled: true
+
+logs:
+  general:
+    format: json
+    level: INFO

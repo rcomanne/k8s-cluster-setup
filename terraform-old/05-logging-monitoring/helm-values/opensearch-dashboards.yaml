@@ -1,0 +1,16 @@
+opensearchAccount:
+  secret: "opensearch-dashboard"
+
+opensearchHosts: "http://opensearch-cluster-master:9200"
+
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: monitoring.rcomanne.nl
+      paths:
+        - path: /
+          backend:
+            serviceName: ""
+            servicePort: ""

@@ -26,6 +26,11 @@ resource "argocd_project" "applications" {
       server    = local.argocd_cluster_server
       namespace = kubernetes_namespace.nextcloud.metadata.0.name
     }
+#    destination {
+#      name      = "in-cluster"
+#      server    = local.argocd_cluster_server
+#      namespace = kubernetes_namespace.akaunting.metadata.0.name
+#    }
 
     cluster_resource_whitelist {
       group = "*"

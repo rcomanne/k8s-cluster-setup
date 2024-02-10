@@ -80,3 +80,22 @@ resource "kubernetes_storage_class" "nfs-csi-default" {
   ]
   allow_volume_expansion = true
 }
+
+resource "kubernetes_storage_class" "nfs-csi-async" {
+  metadata {
+    name = "nfs-csi-async"
+  }
+  storage_provisioner = "nfs.csi.k8s.io"
+  parameters = {
+    server = "truenas.home"
+    share  = "/mnt/habbo/nfs/rcomanne/async"
+  }
+  reclaim_policy      = "Delete"
+  volume_binding_mode = "Immediate"
+  mount_options = [
+    "nfsvers=4.1",
+    "hard",
+    "async",
+  ]
+  allow_volume_expansion = true
+}

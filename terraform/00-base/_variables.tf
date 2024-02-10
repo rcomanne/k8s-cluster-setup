@@ -65,7 +65,7 @@ variable "domain_name" {
 
 variable "hc_vault_version" {
   type    = string
-  default = "0.25.0"
+  default = "0.27.0"
 }
 
 variable "cnpg_version" {

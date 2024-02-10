@@ -1,6 +1,9 @@
 resource "kubernetes_namespace" "prometheus" {
   metadata {
     name = "prometheus"
+    labels = {
+      "pod-security.kubernetes.io/enforce" = "privileged"
+    }
   }
 }
 
@@ -58,6 +61,7 @@ resource "argocd_project" "prometheus" {
 
     source_namespaces = ["*"]
     source_repos = [
+      argocd_repository.k8s_deployments.repo,
       argocd_repository.prometheus_community.repo,
     ]
   }
@@ -74,8 +78,8 @@ resource "random_password" "grafana_admin" {
 }
 
 resource "vault_kv_secret_v2" "grafana_admin" {
-  mount     = vault_mount.homelab.path
-  name      = "grafana"
+  mount = vault_mount.homelab.path
+  name  = "grafana"
   data_json = jsonencode({
     admin = random_password.grafana_admin.result
   })
@@ -95,14 +99,17 @@ resource "argocd_application" "kube_prometheus_stack" {
       target_revision = var.kube_prometheus_stack_version
 
       helm {
-        values = templatefile("helm-values/kube-prometheus-stack/values.yaml", {
-          grafanaAdminPassword = random_password.grafana_admin.result
-        })
-
-
+        value_files = ["$values/kube-prometheus-stack/values.yaml"]
+        parameter {
+          name  = "grafana.adminPassword"
+          value = random_password.grafana_admin.result
+        }
       }
+    }
 
-
+    source {
+      repo_url = argocd_repository.k8s_deployments.repo
+      ref      = "values"
     }
 
     sync_policy {

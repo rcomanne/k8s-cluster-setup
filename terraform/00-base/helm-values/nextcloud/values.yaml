@@ -6,8 +6,11 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 
+image:
+  flavor: fpm
+
 nextcloud:
-  host: nextcloud.rcomanne.nl
+  host: ${host}
   containerPort: 8080
 
   existingSecret:
@@ -16,27 +19,71 @@ nextcloud:
     usernameKey: username
     passwordKey: password
 
-#  securityContext:
-#    runAsUser: 33
-#    runAsGroup: 33
-#    runAsNonRoot: true
-#
-#  podSecurityContext:
-#    runAsUser: 33
-#    runAsGroup: 33
-#    runAsNonRoot: true
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+
+  configs:
+    custom.config.php: |
+      <?php
+        $CONFIG = array(
+          "check_data_directory_permissions"=> false, # fix data directory permissions error
+          'overwriteprotocol' => 'https',
+          'overwritehost' => '${host}',
+          "trusted_domains" => array (
+            $_ENV["NEXTCLOUD_TRUSTED_DOMAINS"], # fix probes 400 error
+          ),
+          "trusted_proxies" => array (
+            0 => '192.168.2.0/24',
+            1 => '10.0.0.0/8',
+          ),
+        );
+
+  extraVolumes:
+    - name: nginx-cache
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: nginx-cache
+      mountPath: "/var/cache/nginx" # fix permission denied error
+
+nginx:
+  enabled: true
+  containerPort: 8080
+  image:
+    repository: nginxinc/nginx-unprivileged
+    tag: 1.25
 
 startupProbe:
   enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 60
 
-#internalDatabase:
-#  enabled: false
-#
-#externalDatabase:
-#  enabled: true
-#  type: postgresql
+livenessProbe:
+  initialDelaySeconds: 30
 
-#persistence:
-#  enabled: true
-#  storageClass: nfs-csi-default
-#  size: 16Gi
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  type: postgresql
+  existingSecret:
+    enabled: true
+    secretName: ${dbSecretName}
+    usernameKey: db-username
+    passwordKey: db-password
+    hostKey: db-hostname
+    databaseKey: db-name
+
+persistence:
+  enabled: true
+  storageClass: nfs-csi-async
+  size: 16Gi

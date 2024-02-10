@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: ${name}
+  namespace: ${namespace}
+spec:
+  postgresGID: 1000
+  instances: 1
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: ${dbName}
+      owner: ${dbOwner}
+      secret:
+        name: ${dbSecretName}
+  storage:
+    size: ${size}
+    storageClass: ${storageClass}

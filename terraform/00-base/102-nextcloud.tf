@@ -1,3 +1,7 @@
+locals {
+  nextcloud_admin_username = "nextcloud"
+}
+
 resource "kubernetes_namespace" "nextcloud" {
   metadata {
     name = "nextcloud"
@@ -22,17 +26,17 @@ resource "kubernetes_secret" "nextcloud_admin" {
   type = "Opaque"
 
   data = {
-    username = "nextcloud"
+    username = local.nextcloud_admin_username
     password = random_password.nextcloud_admin.result
   }
 }
 
 resource "vault_kv_secret_v2" "nextcloud_admin" {
-  mount     = vault_mount.homelab.path
-  name      = "nextcloud/admin"
+  mount = vault_mount.homelab.path
+  name  = "nextcloud/admin"
   data_json = jsonencode({
-    username = "nextcloud"
-    password = random_password.nextcloud_postgres.result
+    username = local.nextcloud_admin_username
+    password = random_password.nextcloud_admin.result
   })
 }
 
@@ -40,9 +44,9 @@ resource "random_password" "nextcloud_postgres" {
   length = 16
 }
 
-resource "kubernetes_secret" "nextcloud_postgres" {
+resource "kubernetes_secret" "nextcloud_cnpg_postgres" {
   metadata {
-    name      = "nextcloud-postgres"
+    name      = "nextcloud-cnpg-postgres"
     namespace = kubernetes_namespace.nextcloud.metadata.0.name
   }
   type = "kubernetes.io/basic-auth"
@@ -54,8 +58,8 @@ resource "kubernetes_secret" "nextcloud_postgres" {
 }
 
 resource "vault_kv_secret_v2" "nextcloud_postgres" {
-  mount     = vault_mount.homelab.path
-  name      = "nextcloud/postgres"
+  mount = vault_mount.homelab.path
+  name  = "nextcloud/postgres"
   data_json = jsonencode({
     username = "nextcloud"
     password = random_password.nextcloud_postgres.result
@@ -66,12 +70,25 @@ resource "kubernetes_manifest" "nextcloud_database" {
   manifest = yamldecode(templatefile("${path.module}/manifests/nextcloud/database.yaml", {
     name         = kubernetes_namespace.nextcloud.metadata.0.name,
     namespace    = kubernetes_namespace.nextcloud.metadata.0.name,
-    dbSecretName = kubernetes_secret.nextcloud_postgres.metadata.0.name
+    dbSecretName = kubernetes_secret.nextcloud_cnpg_postgres.metadata.0.name
     storageClass = kubernetes_storage_class.nfs-csi-postgres.metadata.0.name,
   }))
 }
 
+resource "kubernetes_secret" "nextcloud_postgres" {
+  metadata {
+    name      = "nextcloud-postgres"
+    namespace = kubernetes_namespace.nextcloud.metadata.0.name
+  }
+  type = "Opaque"
 
+  data = {
+    db-hostname = "nextcloud-rw:5432"
+    db-name     = "nextcloud"
+    db-username = "nextcloud"
+    db-password = random_password.nextcloud_postgres.result
+  }
+}
 
 resource "argocd_application" "nextcloud" {
   metadata {
@@ -87,8 +104,13 @@ resource "argocd_application" "nextcloud" {
       target_revision = var.nextcloud_version
 
       helm {
-        values = file("helm-values/nextcloud/values.yaml")
+        value_files = ["$values/nextcloud/homelab/values.yaml"]
       }
+    }
+
+    source {
+      repo_url = argocd_repository.k8s_deployments.repo
+      ref      = "values"
     }
 
     sync_policy {
